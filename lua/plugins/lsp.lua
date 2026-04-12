@@ -199,7 +199,7 @@ return {
         },
         update_in_insert = false,
         virtual_text = {
-          severity = { min = vim.diagnostic.severity.WARN },
+          severity = { min = vim.diagnostic.severity.ERROR },
           spacing = 4,
           source = 'if_many',
           prefix = '●',
