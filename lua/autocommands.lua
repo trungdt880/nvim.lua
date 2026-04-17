@@ -53,20 +53,29 @@ vim.api.nvim_create_user_command('CopyFilePath', function()
 end, {})
 
 -- disable auto-indent when escaping to normal mode
-local function apply_ts_indent_if_blank()
-  local buf = vim.api.nvim_get_current_buf()
-  local lnum = vim.api.nvim_win_get_cursor(0)[1]
+local function apply_ts_indent_if_blank(args)
+  local buf = args.buf
+  if not vim.api.nvim_buf_is_valid(buf) then return end
+  if vim.bo[buf].buftype ~= '' then return end -- only normal file buffers
+  if not vim.bo[buf].modifiable then return end
+  if vim.bo[buf].readonly then return end
 
+  local lnum = vim.api.nvim_win_get_cursor(0)[1]
   local line = vim.api.nvim_buf_get_lines(buf, lnum - 1, lnum, false)[1]
   if line ~= '' then return end
 
-  -- get indent from indentexpr (Tree-sitter or fallback)
+  local indentexpr = vim.bo[buf].indentexpr
+  if indentexpr == nil or indentexpr == '' then return end
+
   local old_lnum = vim.v.lnum
   vim.v.lnum = lnum
-  local indent = vim.fn.eval(vim.bo.indentexpr)
+  local ok, indent = pcall(vim.fn.eval, indentexpr)
   vim.v.lnum = old_lnum
+  if not ok then return end
 
+  indent = tonumber(indent) or 0
   if indent > 0 then vim.api.nvim_buf_set_lines(buf, lnum - 1, lnum, false, { string.rep(' ', indent) }) end
+
   vim.api.nvim_feedkeys(vim.api.nvim_replace_termcodes('$', true, false, true), 'n', true)
 end
 
