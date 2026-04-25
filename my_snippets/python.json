@@ -14,5 +14,12 @@
       "    app()"
     ],
     "description": "CLI boilerplate for typer"
+  },
+  "ipdb": {
+    "prefix": "ipdb",
+    "body": [
+      "import ipdb; ipdb.set_trace()  # fmt: skip"
+    ],
+    "description": "One-line ipdb breakpoint"
   }
 }
