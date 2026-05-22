@@ -21,8 +21,9 @@ return {
     'mason-org/mason.nvim',
     'jay-babu/mason-nvim-dap.nvim',
 
-    -- Add your own debuggers here
+    -- Language-specific debug adapters
     'leoluz/nvim-dap-go',
+    'mfussenegger/nvim-dap-python',
   },
   keys = {
     -- Basic debugging keymaps, feel free to change to your liking!
@@ -95,6 +96,7 @@ return {
       ensure_installed = {
         -- Update this to ensure that you have the debuggers for the langs you want
         'delve',
+        'debugpy',
       },
     }
 
@@ -144,5 +146,11 @@ return {
         detached = vim.fn.has 'win32' == 0,
       },
     }
+
+    -- Python: use debugpy from Mason. venv-selector overrides this when a venv
+    -- is selected via <leader>cv, so this is just the fallback interpreter.
+    local mason_debugpy = vim.fn.stdpath 'data' .. '/mason/packages/debugpy/venv/bin/python'
+    local python_path = vim.fn.executable(mason_debugpy) == 1 and mason_debugpy or 'python3'
+    require('dap-python').setup(python_path)
   end,
 }

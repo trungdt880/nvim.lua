@@ -67,7 +67,14 @@ return {
       --  - va)  - [V]isually select [A]round [)]paren
       --  - yinq - [Y]ank [I]nside [N]ext [Q]uote
       --  - ci'  - [C]hange [I]nside [']quote
-      require('mini.ai').setup { n_lines = 500 }
+      require('mini.ai').setup {
+        -- NOTE: Avoid conflicts with built-in incremental selection on Nvim >= 0.12 (see `:help treesitter-incremental-selection`)
+        mappings = {
+          around_next = 'aa',
+          inside_next = 'ii',
+        },
+        n_lines = 500,
+      }
 
       -- Add/delete/replace surroundings (brackets, quotes, etc.)
       --
@@ -297,6 +304,11 @@ return {
         '<leader>sD',
         function() Snacks.picker.diagnostics_buffer() end,
         desc = 'Buffer Diagnostics',
+      },
+      {
+        '<leader>se',
+        function() Snacks.picker.diagnostics { severity = vim.diagnostic.severity.ERROR } end,
+        desc = 'Errors only',
       },
       {
         '<leader>sh',

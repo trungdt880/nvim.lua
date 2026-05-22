@@ -76,6 +76,11 @@ return {
         desc = 'Buffer Diagnostics (Trouble)',
       },
       {
+        '<leader>xe',
+        '<cmd>Trouble diagnostics toggle filter.severity=vim.diagnostic.severity.ERROR<cr>',
+        desc = 'Errors only (Trouble)',
+      },
+      {
         '<leader>cs',
         '<cmd>Trouble symbols toggle focus=false<cr>',
         desc = 'Symbols (Trouble)',

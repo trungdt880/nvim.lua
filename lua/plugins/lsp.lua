@@ -123,16 +123,16 @@ return {
 
           -- Fuzzy find all the symbols in your current document.
           --  Symbols are things like variables, functions, types, etc.
-          map('gO', require('telescope.builtin').lsp_document_symbols, 'Open Document Symbols')
+          map('gO', function() Snacks.picker.lsp_symbols() end, 'Open Document Symbols')
 
           -- Fuzzy find all the symbols in your current workspace.
           --  Similar to document symbols, except searches over your entire project.
-          map('gW', require('telescope.builtin').lsp_dynamic_workspace_symbols, 'Open Workspace Symbols')
+          map('gW', function() Snacks.picker.lsp_workspace_symbols() end, 'Open Workspace Symbols')
 
           -- Jump to the type of the word under your cursor.
           --  Useful when you're not sure what type a variable is and you want to see
           --  the definition of its *type*, not where it was *defined*.
-          map('grt', require('telescope.builtin').lsp_type_definitions, '[G]oto [T]ype Definition')
+          map('grt', function() Snacks.picker.lsp_type_definitions() end, '[G]oto [T]ype Definition')
 
           -- Toggle to show/hide diagnostic messages
           map('<leader>td', function() vim.diagnostic.enable(not vim.diagnostic.is_enabled()) end, '[T]oggle [D]iagnostics')
@@ -157,7 +157,6 @@ return {
           --    See `:help CursorHold` for information about when this is executed
           --
           -- When you move your cursor, the highlights will be cleared (the second autocommand).
-          local client = vim.lsp.get_client_by_id(event.data.client_id)
           if client and client:supports_method('textDocument/documentHighlight', event.buf) then
             local highlight_augroup = vim.api.nvim_create_augroup('kickstart-lsp-highlight', { clear = false })
             vim.api.nvim_create_autocmd({ 'CursorHold', 'CursorHoldI' }, {
@@ -193,10 +192,33 @@ return {
 
       -- Diagnostic Config
       -- See :help vim.diagnostic.Opts
+      --
+      -- Tuned for noisy codebases (PyTorch, ML research): only ERRORs show in the
+      -- gutter, inline, and as underlines. Warnings/hints remain in the buffer —
+      -- navigate with `[d`/`]d`, view all via `:Trouble diagnostics` or `<leader>sd`.
+      -- See `<leader>xe`/`<leader>se` for errors-only views.
+      -- Custom underline handler: ERROR only, plus any diagnostic tagged
+      -- Unnecessary (unused imports/vars) regardless of severity. Built-in
+      -- severity filter would drop the Unnecessary diagnostics too, killing
+      -- the grayed-out-import effect.
+      local UNNECESSARY = 1 -- LSP DiagnosticTag.Unnecessary
+      local underline_handler = vim.diagnostic.handlers.underline
+      vim.diagnostic.handlers.underline = {
+        show = function(ns, bufnr, diagnostics, opts)
+          local filtered = vim.tbl_filter(function(d)
+            if d.severity == vim.diagnostic.severity.ERROR then return true end
+            if d.tags and vim.tbl_contains(d.tags, UNNECESSARY) then return true end
+            return false
+          end, diagnostics)
+          underline_handler.show(ns, bufnr, filtered, opts)
+        end,
+        hide = underline_handler.hide,
+      }
+
       vim.diagnostic.config {
-        underline = {
-          severity = false,
-        },
+        -- underline severity stays unfiltered: the custom handler above does
+        -- the actual filtering so it can keep Unnecessary tags through.
+        underline = { severity = false },
         update_in_insert = false,
         virtual_text = {
           severity = { min = vim.diagnostic.severity.ERROR },
@@ -206,6 +228,7 @@ return {
         },
         severity_sort = true,
         signs = {
+          severity = { min = vim.diagnostic.severity.ERROR },
           text = {
             [vim.diagnostic.severity.ERROR] = '',
             [vim.diagnostic.severity.WARN] = '',
@@ -274,13 +297,15 @@ return {
           ruff = {
             settings = {
               ruff = {
-                lineLength = 100, -- Match Black formatting
+                lineLength = 100,
                 lint = {
-                  enable = true, -- Enable linting
-                  select = { 'E', 'W', 'F' }, -- Select which rules to use
+                  enable = true,
+                  -- NOTE: prefer setting `select`/`ignore` in project's pyproject.toml
+                  -- (`pyrufflint` snippet). These defaults apply only when no project config.
+                  select = { 'E', 'W', 'F', 'I', 'B', 'UP', 'SIM', 'N', 'RUF' },
                 },
                 typeCheck = {
-                  enable = true, -- Enable type checking (like Mypy)
+                  enable = true,
                 },
               },
             },
@@ -359,8 +384,8 @@ return {
       vim.list_extend(ensure_installed, {
         'lua_ls',
         'bashls',
-        'black',
-        'isort',
+        -- Python: ruff handles format + import sort + lint (replaces black/isort)
+        'debugpy',
         'jq',
         'json-lsp',
         'jsonls',
@@ -467,8 +492,9 @@ return {
       end,
       formatters_by_ft = {
         lua = { 'stylua' },
-        -- Conform can also run multiple formatters sequentially
-        python = { 'isort', 'black' },
+        -- Ruff replaces black + isort: one tool, single Rust binary, ~100x faster.
+        -- Run organize_imports first so format pass cleans up any resulting newlines.
+        python = { 'ruff_organize_imports', 'ruff_format' },
         --
         -- You can use 'stop_after_first' to run the first available formatter from the list
         -- javascript = { "prettierd", "prettier", stop_after_first = true },

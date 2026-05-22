@@ -6,7 +6,11 @@
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
 
 -- Diagnostic keymaps
-vim.keymap.set('n', '<leader>q', vim.diagnostic.setloclist, { desc = 'Open diagnostic [Q]uickfix list' })
+-- Errors-only: noisy codebases (PyTorch, ML) flood the loclist otherwise.
+-- For all diagnostics use `<leader>sd` (Snacks) or `:Trouble diagnostics`.
+vim.keymap.set('n', '<leader>q', function()
+  vim.diagnostic.setqflist { severity = { min = vim.diagnostic.severity.ERROR } }
+end, { desc = 'Errors to quickfix' })
 
 -- Exit terminal mode in the builtin terminal with a shortcut that is a bit easier
 -- for people to discover. Otherwise, you normally need to press <C-\><C-n>, which
@@ -39,25 +43,29 @@ end
 --   require('origami').l()
 -- end)
 map('n', '[d', function()
-  vim.diagnostic.goto_prev {
+  vim.diagnostic.jump {
+    count = -1,
     severity = vim.diagnostic.severity.WARN,
     wrap = true,
   }
 end, { desc = 'Previous warning diagnostic in buffer' })
 map('n', ']d', function()
-  vim.diagnostic.goto_next {
+  vim.diagnostic.jump {
+    count = 1,
     severity = vim.diagnostic.severity.WARN,
     wrap = true,
   }
 end, { desc = 'Next warning diagnostic in buffer' })
 map('n', '[D', function()
-  vim.diagnostic.goto_prev {
+  vim.diagnostic.jump {
+    count = -1,
     severity = vim.diagnostic.severity.ERROR,
     wrap = true,
   }
 end, { desc = 'Previous error diagnostic in buffer' })
 map('n', ']D', function()
-  vim.diagnostic.goto_next {
+  vim.diagnostic.jump {
+    count = 1,
     severity = vim.diagnostic.severity.ERROR,
     wrap = true,
   }
@@ -90,12 +98,11 @@ map('n', 'N', 'Nzzzv', { desc = 'Prev find' })
 map('v', '<', '<gv', { desc = 'Indent left and reselect' })
 map('v', '>', '>gv', { desc = 'Indent right and reselect' })
 
--- UI
-map('n', '<leader>un', '<cmd>Telescope notify<CR>', { desc = 'RsyncRepo: Upload' })
-
 -- utils
-map('n', '<C-k>', '<cmd>cnext<CR>zz', { desc = 'Next in quick fix' })
-map('n', '<C-j>', '<cmd>cprev<CR>zz', { desc = 'Prev in quick fix' })
+-- NOTE: <C-k>/<C-j> stay reserved for window navigation (see lines 25-26).
+-- Use vim's built-in ]q/[q for quickfix nav, or <leader>k/<leader>j for location list.
+map('n', ']q', '<cmd>cnext<CR>zz', { desc = 'Next in quickfix' })
+map('n', '[q', '<cmd>cprev<CR>zz', { desc = 'Prev in quickfix' })
 map('n', '<leader>k', '<cmd>lnext<CR>zz', { desc = 'Next in location' })
 map('n', '<leader>j', '<cmd>lprev<CR>zz', { desc = 'Prev in location' })
 map('n', '<leader>X', '<cmd>!chmod +x %<CR>', { silent = true })
