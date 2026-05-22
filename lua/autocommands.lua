@@ -82,3 +82,14 @@ end
 vim.api.nvim_create_autocmd('InsertLeave', {
   callback = apply_ts_indent_if_blank,
 })
+
+-- Quickfix window: <C-j>/<C-k> jump entry-by-entry (long messages don't trap you).
+-- Buffer-local so global window nav (C-h/j/k/l) stays intact elsewhere.
+vim.api.nvim_create_autocmd('FileType', {
+  pattern = 'qf',
+  callback = function(args)
+    local opts = { buffer = args.buf, silent = true }
+    vim.keymap.set('n', '<C-j>', '<cmd>cnext<CR><cmd>copen<CR>', opts)
+    vim.keymap.set('n', '<C-k>', '<cmd>cprev<CR><cmd>copen<CR>', opts)
+  end,
+})

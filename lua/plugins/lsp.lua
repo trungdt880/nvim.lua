@@ -184,6 +184,9 @@ return {
           -- This may be unwanted, since they displace some of your code
           if client and client:supports_method('textDocument/inlayHint', event.buf) then
             map('<leader>th', function() vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf }) end, '[T]oggle Inlay [H]ints')
+            -- Auto-enable for ty (Python): variable types + call argument names
+            -- are on by default server-side; nvim still needs explicit render enable.
+            if client.name == 'ty' then vim.lsp.inlay_hint.enable(true, { bufnr = event.buf }) end
           end
         end,
       })
