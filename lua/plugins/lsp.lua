@@ -197,27 +197,24 @@ return {
       -- gutter, inline, and as underlines. Warnings/hints remain in the buffer —
       -- navigate with `[d`/`]d`, view all via `:Trouble diagnostics` or `<leader>sd`.
       -- See `<leader>xe`/`<leader>se` for errors-only views.
-      -- Custom underline handler: ERROR only, plus any diagnostic tagged
-      -- Unnecessary (unused imports/vars) regardless of severity. Built-in
-      -- severity filter would drop the Unnecessary diagnostics too, killing
-      -- the grayed-out-import effect.
-      local UNNECESSARY = 1 -- LSP DiagnosticTag.Unnecessary
-      local underline_handler = vim.diagnostic.handlers.underline
-      vim.diagnostic.handlers.underline = {
-        show = function(ns, bufnr, diagnostics, opts)
-          local filtered = vim.tbl_filter(function(d)
-            if d.severity == vim.diagnostic.severity.ERROR then return true end
-            if d.tags and vim.tbl_contains(d.tags, UNNECESSARY) then return true end
-            return false
-          end, diagnostics)
-          underline_handler.show(ns, bufnr, filtered, opts)
-        end,
-        hide = underline_handler.hide,
-      }
+      -- Quiet WARN/INFO/HINT underlines without losing the DiagnosticUnnecessary
+      -- gray-out for unused imports. Strategy: leave the underline handler on
+      -- for all severities, but blank out the non-ERROR underline highlight
+      -- groups. DiagnosticUnnecessary is a separate group (links to Comment)
+      -- and keeps working.
+      local function hush_warn_underlines()
+        vim.api.nvim_set_hl(0, 'DiagnosticUnderlineWarn', {})
+        vim.api.nvim_set_hl(0, 'DiagnosticUnderlineInfo', {})
+        vim.api.nvim_set_hl(0, 'DiagnosticUnderlineHint', {})
+        vim.api.nvim_set_hl(0, 'DiagnosticUnderlineOk', {})
+      end
+      hush_warn_underlines()
+      vim.api.nvim_create_autocmd('ColorScheme', {
+        group = vim.api.nvim_create_augroup('hush-diag-underlines', { clear = true }),
+        callback = hush_warn_underlines,
+      })
 
       vim.diagnostic.config {
-        -- underline severity stays unfiltered: the custom handler above does
-        -- the actual filtering so it can keep Unnecessary tags through.
         underline = { severity = false },
         update_in_insert = false,
         virtual_text = {
