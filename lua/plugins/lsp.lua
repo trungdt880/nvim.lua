@@ -413,6 +413,11 @@ return {
       vim.lsp.config('ty', { capabilities = capabilities, settings = { ty = {} } })
       vim.lsp.enable 'ty'
 
+      -- Disable basedpyright explicitly. mason-lspconfig's automatic_enable
+      -- still picks up the installed binary even after removing the config block.
+      -- To rollback: comment this line, uncomment basedpyright config above.
+      vim.lsp.enable('basedpyright', false)
+
       -- Special Lua Config, as recommended by neovim help docs
       vim.lsp.config('lua_ls', {
         on_init = function(client)
