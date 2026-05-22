@@ -86,13 +86,11 @@ return {
 
           -- Additional on_attach logic
           local client = vim.lsp.get_client_by_id(event.data.client_id)
-          if client.name == 'basedpyright' then client.server_capabilities.semanticTokensProvider = nil end
+          -- if client.name == 'basedpyright' then client.server_capabilities.semanticTokensProvider = nil end
 
           if client.name == 'ruff' then
-            -- Disable hover in favor of Pyright
+            -- Ruff: lint/format/import-sort only. Hover + types come from ty.
             client.server_capabilities.hoverProvider = false
-
-            -- Disable formatting
             client.server_capabilities.documentFormattingProvider = false
             client.server_capabilities.documentRangeFormattingProvider = false
           end
@@ -307,47 +305,48 @@ return {
               },
             },
           },
-          basedpyright = {
+          -- ty (Astral) replaces basedpyright as the Python type checker / LSP.
+          -- Defaults; per-project tuning lives in `[tool.ty]` of pyproject.toml.
+          ty = {
             settings = {
-              basedpyright = {
-                disableOrganizeImports = true,
-                typeCheckingMode = 'off',
-                analysis = {
-                  autoSearchPaths = false,
-                  diagnosticMode = 'openFilesOnly',
-                  diagnosticSeverityOverrides = {
-                    reportAttributeAccessIssue = 'none',
-                    reportOptionalMemberAccess = 'none',
-                    reportUnusedVariable = 'none',
-                    reportUnusedCallResult = 'none',
-                    reportUnusedExpression = 'none',
-                    reportUnknownMemberType = 'none',
-                    reportUnknownLambdaType = 'none',
-                    reportUnknownParameterType = 'none',
-                    reportMissingParameterType = 'none',
-                    reportMissingTypeStub = 'information',
-                    reportUnknownVariableType = 'none',
-                    reportUnknownArgumentType = 'none',
-                    reportImplicitOverride = 'none',
-                    reportUndefinedVariable = 'error',
-                    reportMissingImports = 'error',
-                    reportGeneralTypeIssues = 'error',
-                    reportCallIssue = 'none',
-                    reportAny = 'none',
-                  },
-                  inlayHints = {
-                    callArgumentNames = true,
-                  },
-                },
-              },
-              python = {
-                analysis = {
-                  -- Ignore all files for analysis to exclusively use Ruff for linting
-                  ignore = { '*' },
-                },
-              },
+              ty = {},
             },
           },
+          -- Basedpyright kept commented for easy rollback:
+          -- basedpyright = {
+          --   settings = {
+          --     basedpyright = {
+          --       disableOrganizeImports = true,
+          --       typeCheckingMode = 'off',
+          --       analysis = {
+          --         autoSearchPaths = false,
+          --         diagnosticMode = 'openFilesOnly',
+          --         diagnosticSeverityOverrides = {
+          --           reportAttributeAccessIssue = 'none',
+          --           reportOptionalMemberAccess = 'none',
+          --           reportUnusedVariable = 'none',
+          --           reportUnusedCallResult = 'none',
+          --           reportUnusedExpression = 'none',
+          --           reportUnknownMemberType = 'none',
+          --           reportUnknownLambdaType = 'none',
+          --           reportUnknownParameterType = 'none',
+          --           reportMissingParameterType = 'none',
+          --           reportMissingTypeStub = 'information',
+          --           reportUnknownVariableType = 'none',
+          --           reportUnknownArgumentType = 'none',
+          --           reportImplicitOverride = 'none',
+          --           reportUndefinedVariable = 'error',
+          --           reportMissingImports = 'error',
+          --           reportGeneralTypeIssues = 'error',
+          --           reportCallIssue = 'none',
+          --           reportAny = 'none',
+          --         },
+          --         inlayHints = { callArgumentNames = true },
+          --       },
+          --     },
+          --     python = { analysis = { ignore = { '*' } } },
+          --   },
+          -- },
           cmake = {
             root_dir = util.root_pattern('build', 'build_x64_linux', 'build_aarch64_linux'),
             settings = {
@@ -407,6 +406,12 @@ return {
         vim.lsp.config(name, server)
         vim.lsp.enable(name)
       end
+
+      -- ty (Astral) — explicit enable; mason-lspconfig auto-detect doesn't
+      -- recognize it yet (mason-org/mason-lspconfig.nvim#642). Settings live
+      -- in pyproject.toml [tool.ty]; nvim only forwards capabilities.
+      vim.lsp.config('ty', { capabilities = capabilities, settings = { ty = {} } })
+      vim.lsp.enable 'ty'
 
       -- Special Lua Config, as recommended by neovim help docs
       vim.lsp.config('lua_ls', {
