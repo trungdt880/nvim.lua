@@ -20,14 +20,8 @@ end, { desc = 'Errors to quickfix' })
 -- or just use <C-\><C-n> to exit terminal mode
 vim.keymap.set('t', '<Esc><Esc>', '<C-\\><C-n>', { desc = 'Exit terminal mode' })
 
--- Keybinds to make split navigation easier.
---  Use CTRL+<hjkl> to switch between windows
---
---  See `:help wincmd` for a list of all window commands
-vim.keymap.set('n', '<C-h>', '<C-w><C-h>', { desc = 'Move focus to the left window' })
-vim.keymap.set('n', '<C-l>', '<C-w><C-l>', { desc = 'Move focus to the right window' })
-vim.keymap.set('n', '<C-j>', '<C-w><C-j>', { desc = 'Move focus to the lower window' })
-vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper window' })
+-- Window navigation lives in vim-tmux-navigator (lua/plugins/nav.lua):
+--   <C-h/j/k/l> hop across both vim splits and tmux panes seamlessly.
 
 -- [[ Custom keymap ]]
 local function map(mode, lhs, rhs, opts)
@@ -36,6 +30,9 @@ local function map(mode, lhs, rhs, opts)
   vim.keymap.set(mode, lhs, rhs, opts)
 end
 
+-- Origami fold-aware h/l on arrow keys: <Left> closes a fold when the cursor
+-- sits on its first column; <Right> opens a closed fold under the cursor.
+-- Disabled because we use hjkl, not arrow keys.
 -- vim.keymap.set('n', '<Left>', function()
 --   require('origami').h()
 -- end)
@@ -77,12 +74,11 @@ map('n', '<C-f>', '<cmd>silent !tmux neww t<CR>', { desc = 'Open new tmux sessio
 map('n', '<leader>F', '<cmd>silent !tmux neww tmux-sessionizer<CR>', { desc = 'Open new tmux' })
 
 -- move line
-map('x', 'J', ":move '>+1<CR>gv=gv", { desc = 'Move line up' })
-map('x', 'K', ":move '<-2<CR>gv=gv", { desc = 'Move line down' })
+map('x', 'J', ":move '>+1<CR>gv=gv", { desc = 'Move selection down' })
+map('x', 'K', ":move '<-2<CR>gv=gv", { desc = 'Move selection up' })
 
 -- yank and paste
 map('x', '<leader>p', [["_dP]], { desc = 'Paste without remove clipboard' })
-map('x', '<leader>y', [["_P]], { desc = 'Yank to clipboard' })
 map('n', '<leader>y', [["+y]], { desc = 'Yank to system clipboard' })
 map('n', '<leader>Y', [["+Y]], { desc = 'Yank til end system clipboard' })
 map('v', '<leader>y', [["+y]], { desc = 'Yank to system clipboard' })
@@ -99,16 +95,19 @@ map('v', '<', '<gv', { desc = 'Indent left and reselect' })
 map('v', '>', '>gv', { desc = 'Indent right and reselect' })
 
 -- utils
--- NOTE: <C-k>/<C-j> stay reserved for window navigation (see lines 25-26).
--- Use vim's built-in ]q/[q for quickfix nav, or <leader>k/<leader>j for location list.
+-- <C-h/j/k/l> reserved for window/tmux navigation (vim-tmux-navigator).
+-- Quickfix: ]q/[q (vim built-in style). Location list: <leader>j/k (natural
+-- direction — j = down/forward = next, k = up/back = prev).
 map('n', ']q', '<cmd>cnext<CR>zz', { desc = 'Next in quickfix' })
 map('n', '[q', '<cmd>cprev<CR>zz', { desc = 'Prev in quickfix' })
-map('n', '<leader>k', '<cmd>lnext<CR>zz', { desc = 'Next in location' })
-map('n', '<leader>j', '<cmd>lprev<CR>zz', { desc = 'Prev in location' })
-map('n', '<leader>X', '<cmd>!chmod +x %<CR>', { silent = true })
+map('n', '<leader>j', '<cmd>lnext<CR>zz', { desc = 'Next in location' })
+map('n', '<leader>k', '<cmd>lprev<CR>zz', { desc = 'Prev in location' })
+map('n', '<leader>X', '<cmd>!chmod +x %<CR>', { desc = 'Chmod +x current file' })
 
-map('n', '<leader>bu', vim.cmd.UndotreeToggle, { desc = 'Undotree toggle' })
-map('n', '<leader>gs', vim.cmd.Git, { desc = 'Git toggle' })
+map('n', '<leader>tu', vim.cmd.UndotreeToggle, { desc = '[T]oggle [U]ndotree' })
+map('n', '<leader>gG', vim.cmd.Git, { desc = '[G]it fugitive [G]:' })
+-- LazyGit toggle (opens lazygit TUI in a floating terminal).
+-- Disabled in favor of Snacks.lazygit on <leader>gg (qol.lua).
 -- map('n', '<leader>gg', vim.cmd.LazyGit, { desc = 'LazyGit toggle' })
 
 -- cwd problem
@@ -236,6 +235,10 @@ map('n', '<leader>rl', function()
   end
 end, { desc = 'Toggle RsyncRepo Log' })
 
-map('n', '<leader>cp', '<cmd>AerialPrev<CR>', { desc = 'Previous symbol' })
-map('n', '<leader>cn', '<cmd>AerialNext<CR>', { desc = 'Next symbol' })
+map('n', '<leader>cp', '<cmd>AerialPrev<CR>', { desc = '[C]ode [P]revious symbol' })
+map('n', '<leader>cn', '<cmd>AerialNext<CR>', { desc = '[C]ode [N]ext symbol' })
+-- Aerial toggle bound twice on purpose:
+--   <leader>co — co-located with the cp/cn symbol-nav keys ([C]ode [O]utline).
+--   <leader>to — discoverable via the [T]oggle which-key group.
+map('n', '<leader>co', '<cmd>AerialToggle!<CR>', { desc = '[C]ode [O]utline toggle' })
 map('n', '<leader>to', '<cmd>AerialToggle!<CR>', { desc = '[T]oggle [o]utline' })

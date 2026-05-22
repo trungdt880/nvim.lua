@@ -53,6 +53,8 @@ return {
       })
     end,
   },
+  -- treesitter-context: sticky header showing the enclosing function/class as
+  -- you scroll. Disabled; uncomment to enable.
   -- {
   --   'nvim-treesitter/nvim-treesitter-context',
   --   opts = {

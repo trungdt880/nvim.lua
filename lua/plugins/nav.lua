@@ -11,6 +11,8 @@ return {
         window = { suffix = '' },
         quickfix = { suffix = '' },
         yank = { suffix = '' },
+        -- ]c / [c reserved for gitsigns hunk navigation (plugins/gitsigns.lua).
+        comment = { suffix = '' },
         treesitter = { suffix = 'n' },
       }
     end,

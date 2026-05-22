@@ -18,7 +18,7 @@ return {
       },
     },
     config = function()
-      local separator_glyphs = require 'plugins/config/lualine/separator'
+      local separator_glyphs = require 'config.lualine_separator'
       local harpoon_files = require 'harpoon_files'
 
       require('lualine').setup {

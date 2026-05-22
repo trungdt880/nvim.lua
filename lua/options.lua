@@ -4,12 +4,17 @@
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
 
--- Set to true if you have a Nerd Font installed and selected in the terminal
-vim.g.have_nerd_font = false
+-- Set to true if you have a Nerd Font installed and selected in the terminal.
+-- Lualine, snacks, gitsigns, and aerial all render glyphs that require it.
+vim.g.have_nerd_font = true
 
 -- disable netrw
 vim.g.loaded_netrw = 1
 vim.g.loaded_netrwPlugin = 1
+
+-- Format-on-save toggle backing the <leader>tf mapping in plugins/lsp.lua.
+-- Initialized here so the value is never nil (conform.nvim checks truthiness).
+vim.g.disable_autoformat = false
 
 if os.getenv 'SSH_TTY' then
   -- Configure Neovim to use OSC 52 for clipboard operations during SSH sessions
@@ -49,9 +54,10 @@ local options = {
   -- Enable break indent
   breakindent = true,
 
-  -- Save undo history
+  -- Save undo history under the XDG state dir (~/.local/state/nvim/undo by
+  -- default). Avoids the legacy ~/.vim/undodir path that predates XDG.
   undofile = true,
-  undodir = os.getenv 'HOME' .. '/.vim/undodir', -- Uses os.getenv for the path
+  undodir = vim.fn.stdpath 'state' .. '/undo',
   swapfile = false,
 
   -- Case-insensitive searching UNLESS \C or one or more capital letters in the search term

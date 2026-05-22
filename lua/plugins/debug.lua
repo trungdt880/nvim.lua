@@ -26,7 +26,10 @@ return {
     'mfussenegger/nvim-dap-python',
   },
   keys = {
-    -- Basic debugging keymaps, feel free to change to your liking!
+    -- Basic DAP debugging keymaps (continue/step/breakpoint/dapui toggle).
+    -- Disabled because <leader>b collides with the [B]uffer group and the
+    -- F-keys aren't bound to debug actions in this config. Re-enable by
+    -- uncommenting; each entry's `desc` documents its action.
     -- {
     --   '<F5>',
     --   function()

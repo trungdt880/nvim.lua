@@ -1,12 +1,7 @@
 return {
   { 'mbbill/undotree' },
   { 'tpope/vim-fugitive' },
-  {
-    'folke/zen-mode.nvim',
-    cmd = 'ZenMode',
-    config = true,
-    keys = { { '<leader>z', '<cmd>ZenMode<cr>', desc = 'Zen Mode' } },
-  },
+  -- Zen mode comes from Snacks (<leader>z); folke/zen-mode.nvim removed to dedup.
   {
     'kristijanhusak/vim-carbon-now-sh',
     keys = {

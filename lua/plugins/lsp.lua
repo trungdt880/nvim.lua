@@ -86,6 +86,8 @@ return {
 
           -- Additional on_attach logic
           local client = vim.lsp.get_client_by_id(event.data.client_id)
+          -- Strip basedpyright semantic tokens (its highlights fight treesitter).
+          -- Kept for reference; we use ty instead of basedpyright now.
           -- if client.name == 'basedpyright' then client.server_capabilities.semanticTokensProvider = nil end
 
           if client.name == 'ruff' then
@@ -95,28 +97,29 @@ return {
             client.server_capabilities.documentRangeFormattingProvider = false
           end
 
-          -- Rename the variable under your cursor.
-          --  Most Language Servers support renaming across files, etc.
-          map('grn', vim.lsp.buf.rename, '[R]e[n]ame')
+          -- Rename: nvim 0.11+ binds `grn` to vim.lsp.buf.rename by default,
+          -- so no explicit mapping needed here. Re-add the line if running an
+          -- older nvim.
 
-          -- Execute a code action, usually your cursor needs to be on top of an error
-          -- or a suggestion from your LSP for this to activate.
+          -- The block below is kickstart's reference for the standard `gr*` /
+          -- `gd` / `gD` LSP maps. They're disabled here because either:
+          --   * nvim 0.11+ provides them as defaults (gra/grr/gri/gd/gD), or
+          --   * Snacks.picker overrides them in qol.lua with a nicer UI.
+          -- Re-enable individually if you want telescope-backed or vanilla LSP behavior.
+
+          -- gra: code actions menu (LSP suggestions like quick-fix).
           -- map('gra', vim.lsp.buf.code_action, '[G]oto Code [A]ction', { 'n', 'x' })
 
-          -- Find references for the word under your cursor.
+          -- grr: list references to the symbol under cursor.
           -- map('grr', require('telescope.builtin').lsp_references, '[G]oto [R]eferences')
 
-          -- Jump to the implementation of the word under your cursor.
-          --  Useful when your language has ways of declaring types without an actual implementation.
+          -- gri: jump to implementation (useful for interfaces / abstract types).
           -- map('gri', require('telescope.builtin').lsp_implementations, '[G]oto [I]mplementation')
 
-          -- Jump to the definition of the word under your cursor.
-          --  This is where a variable was first declared, or where a function is defined, etc.
-          --  To jump back, press <C-t>.
+          -- gd: jump to definition (where the symbol was declared).
           -- map('gd', require('telescope.builtin').lsp_definitions, '[G]oto [D]efinition')
 
-          -- WARN: This is not Goto Definition, this is Goto Declaration.
-          --  For example, in C this would take you to the header.
+          -- gD: jump to declaration (e.g. C header). NOT the same as gd.
           -- map('gD', vim.lsp.buf.declaration, '[G]oto [D]eclaration')
 
           -- Fuzzy find all the symbols in your current document.
@@ -184,9 +187,9 @@ return {
           -- This may be unwanted, since they displace some of your code
           if client and client:supports_method('textDocument/inlayHint', event.buf) then
             map('<leader>th', function() vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled { bufnr = event.buf }) end, '[T]oggle Inlay [H]ints')
-            -- Auto-enable for ty (Python): variable types + call argument names
-            -- are on by default server-side; nvim still needs explicit render enable.
-            if client.name == 'ty' then vim.lsp.inlay_hint.enable(true, { bufnr = event.buf }) end
+            -- Inlay hints stay OFF by default (they push code around).
+            -- Toggle per buffer with <leader>th, or globally via <leader>uh
+            -- (Snacks.toggle.inlay_hints).
           end
         end,
       })
@@ -404,10 +407,15 @@ return {
       })
       require('mason-tool-installer').setup { ensure_installed = ensure_installed }
 
-      for name, server in pairs(servers) do
-        server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
-        vim.lsp.config(name, server)
-        vim.lsp.enable(name)
+      -- `servers` is nested ({ mason = {...}, others = {...} }). Iterate the
+      -- inner tables so each LSP name (clangd, ruff, ty, cmake, ...) gets its
+      -- custom cmd/settings registered via vim.lsp.config.
+      for _, group in pairs(servers) do
+        for name, server in pairs(group) do
+          server.capabilities = vim.tbl_deep_extend('force', {}, capabilities, server.capabilities or {})
+          vim.lsp.config(name, server)
+          vim.lsp.enable(name)
+        end
       end
 
       -- ty (Astral) — explicit enable; mason-lspconfig auto-detect doesn't
@@ -487,10 +495,9 @@ return {
         -- Disable with a global or buffer-local variable
         if vim.g.disable_autoformat or vim.b[bufnr].disable_autoformat then return end
 
-        -- Disable "format_on_save lsp_fallback" for languages that don't
-        -- have a well standardized coding style. You can add additional
-        -- languages here or re-enable it for the disabled ones.
-        local disable_filetypes = { c = true, cpp = true }
+        -- Filetypes opted out of format-on-save (clang_format handles c/cpp,
+        -- so they stay enabled). Add an entry to disable a language.
+        local disable_filetypes = {}
         if disable_filetypes[vim.bo[bufnr].filetype] then
           return nil
         else
@@ -513,6 +520,8 @@ return {
         clang_format = {
           prepend_args = { '--style=file', '--fallback-style=google' },
         },
+        -- autoflake: strips unused imports/variables from Python files.
+        -- Superseded by ruff (handles unused imports via the `F401` rule).
         -- autoflake = {
         --   prepend_args = { "--remove-all-unused-imports" },
         -- },

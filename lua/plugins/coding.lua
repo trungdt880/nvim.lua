@@ -1,3 +1,6 @@
+-- Editing helpers: number/date bump, folds, line join/split, snippets,
+-- python venv selector, auto-pair brackets.
+
 return {
   {
     'monaqa/dial.nvim',
@@ -20,39 +23,32 @@ return {
       }
     end,
   },
+
   {
     'chrisgrieser/nvim-origami',
     event = 'VeryLazy',
     opts = {
+      -- Disable origami's default h/l fold-aware overrides on hjkl.
+      -- (Currently letting origami bind them; flip to false to keep raw hjkl.)
       -- foldKeymaps = {
       --   setup = false,
       -- },
     }, -- needed even when using default config
-
-    -- recommended: disable vim's auto-folding
+    -- Disable vim's auto-folding so origami controls fold state.
     init = function()
       vim.opt.foldlevel = 99
       vim.opt.foldlevelstart = 99
     end,
   },
+
   {
     'Wansmer/treesj',
     keys = {
-      { '<leader>tj', '<cmd>TSJToggle<cr>', desc = '[T]oggle [J]oin', mode = 'n' },
+      { '<leader>tj', '<cmd>TSJToggle<cr>', desc = '[T]oggle [J]oin' },
     },
     opts = { use_default_keymaps = false, max_join_length = 150 },
   },
-  -- GIT
-  {
-    'kdheepak/lazygit.nvim',
-    dependencies = { 'nvim-lua/plenary.nvim' },
-  },
-  {
-    'sindrets/diffview.nvim',
-    cmd = { 'DiffviewOpen', 'DiffviewClose', 'DiffviewToggleFiles', 'DiffviewFocusFiles' },
-    opts = {},
-    keys = { { '<leader>gd', '<cmd>DiffviewOpen<cr>', desc = 'DiffView' } },
-  },
+
   {
     'rafamadriz/friendly-snippets',
     config = function()
@@ -60,83 +56,26 @@ return {
       require('luasnip.loaders.from_vscode').lazy_load { paths = '~/.config/nvim/my_snippets' }
     end,
   },
-  {
-    'folke/trouble.nvim',
-    opts = {
-      -- jk stays line nav (default), <C-n>/<C-p> jumps issue-by-issue.
-      -- Trouble defaults: } / { also jump items.
-      keys = {
-        ['<C-n>'] = 'next',
-        ['<C-p>'] = 'prev',
-      },
-    },
-    cmd = 'Trouble',
-    keys = {
-      {
-        '<leader>xx',
-        '<cmd>Trouble diagnostics toggle<cr>',
-        desc = 'Diagnostics (Trouble)',
-      },
-      {
-        '<leader>xX',
-        '<cmd>Trouble diagnostics toggle filter.buf=0<cr>',
-        desc = 'Buffer Diagnostics (Trouble)',
-      },
-      {
-        '<leader>xe',
-        '<cmd>Trouble diagnostics toggle filter.severity=vim.diagnostic.severity.ERROR<cr>',
-        desc = 'Errors only (Trouble)',
-      },
-      {
-        '<leader>cs',
-        '<cmd>Trouble symbols toggle focus=false<cr>',
-        desc = 'Symbols (Trouble)',
-      },
-      {
-        '<leader>cl',
-        '<cmd>Trouble lsp toggle focus=false win.position=right<cr>',
-        desc = 'LSP Definitions / references / ... (Trouble)',
-      },
-      {
-        '<leader>xL',
-        '<cmd>Trouble loclist toggle<cr>',
-        desc = 'Location List (Trouble)',
-      },
-      {
-        '<leader>xQ',
-        '<cmd>Trouble qflist toggle<cr>',
-        desc = 'Quickfix List (Trouble)',
-      },
-    },
-  },
+
   {
     'linux-cultist/venv-selector.nvim',
     dependencies = {
       'neovim/nvim-lspconfig',
       'mfussenegger/nvim-dap',
-      'mfussenegger/nvim-dap-python', --optional
+      'mfussenegger/nvim-dap-python',
       { 'nvim-telescope/telescope.nvim', branch = '0.1.x', dependencies = { 'nvim-lua/plenary.nvim' } },
     },
     lazy = false,
-    branch = 'regexp', -- This is the regexp branch, use this for the new version
+    branch = 'regexp',
     keys = {
-      { '<leader>cv', '<cmd>VenvSelect<cr>' },
+      { '<leader>cv', '<cmd>VenvSelect<cr>', desc = '[C]ode select python [v]env' },
     },
   },
+
+  -- Auto-pair brackets/quotes on insert.
   {
-    'iamcco/markdown-preview.nvim',
-    cmd = { 'MarkdownPreviewToggle', 'MarkdownPreview', 'MarkdownPreviewStop' },
-    build = 'cd app && yarn install',
-    init = function() vim.g.mkdp_filetypes = { 'markdown' } end,
-    ft = { 'markdown' },
-  },
-  {
-    'MeanderingProgrammer/render-markdown.nvim',
-    dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-mini/mini.nvim' }, -- if you use the mini.nvim suite
-    -- dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-mini/mini.icons' },        -- if you use standalone mini plugins
-    -- dependencies = { 'nvim-treesitter/nvim-treesitter', 'nvim-tree/nvim-web-devicons' }, -- if you prefer nvim-web-devicons
-    ---@module 'render-markdown'
-    ---@type render.md.UserConfig
+    'windwp/nvim-autopairs',
+    event = 'InsertEnter',
     opts = {},
   },
 }

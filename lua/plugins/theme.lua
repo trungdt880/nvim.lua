@@ -1,4 +1,5 @@
 return {
+  -- Catppuccin: installed but inactive. Uncomment the init block to switch.
   {
     'catppuccin/nvim',
     name = 'catppuccin',
@@ -7,13 +8,15 @@ return {
     -- end,
     priority = 1000,
   },
+  -- Kanagawa (dragon): installed but inactive; kanagawa-paper below is the
+  -- active scheme. Uncomment the init block to switch.
   {
     'rebelot/kanagawa.nvim',
     lazy = false,
     -- init = function()
     --   vim.cmd.colorscheme 'kanagawa'
     -- end,
-    -- color the window separator hot pink
+    -- WinSeparator override below paints split borders hot pink (#FF69B4).
     config = function()
       require('kanagawa').setup {
         colors = {

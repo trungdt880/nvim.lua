@@ -11,30 +11,46 @@ return {
     'folke/noice.nvim',
     event = 'VeryLazy',
     opts = {
-      -- add any options here
       lsp = {
-        -- override markdown rendering so that **cmp** and other plugins use **Treesitter**
+        -- Render LSP markdown via treesitter so cmp/etc pick up nicer highlights.
         override = {
           ['vim.lsp.util.convert_input_to_markdown_lines'] = true,
           ['vim.lsp.util.stylize_markdown'] = true,
           ['cmp.entry.get_documentation'] = true, -- requires hrsh7th/nvim-cmp
         },
       },
-      -- you can enable a preset for easier configuration
       presets = {
-        bottom_search = true, -- use a classic bottom cmdline for search
-        command_palette = true, -- position the cmdline and popupmenu together
-        long_message_to_split = true, -- long messages will be sent to a split
-        inc_rename = false, -- enables an input dialog for inc-rename.nvim
-        lsp_doc_border = false, -- add a border to hover docs and signature help
+        bottom_search = true, -- classic bottom cmdline for search
+        command_palette = true, -- cmdline + popupmenu in one float
+        long_message_to_split = true, -- long messages → split
+        inc_rename = false,
+        lsp_doc_border = false,
       },
     },
+    keys = {
+      -- Toggle the noice message history in a persistent split. Useful when
+      -- a notification disappears before you can read it (e.g. `:lua =foo`).
+      {
+        '<leader>tm',
+        function()
+          for _, win in ipairs(vim.api.nvim_list_wins()) do
+            local buf = vim.api.nvim_win_get_buf(win)
+            if vim.bo[buf].filetype == 'noice' then
+              vim.api.nvim_win_close(win, false)
+              return
+            end
+          end
+          -- `all` includes msg_show, lsp, notify, etc. `history` filters
+          -- to the message history view only.
+          vim.cmd 'Noice all'
+        end,
+        desc = '[T]oggle [M]essage log (noice)',
+      },
+      { '<leader>tM', '<cmd>Noice dismiss<cr>', desc = '[T]oggle: dis[M]iss notifications' },
+    },
     dependencies = {
-      -- if you lazy-load any plugin below, make sure to add proper `module="..."` entries
       'MunifTanjim/nui.nvim',
-      -- OPTIONAL:
-      --   `nvim-notify` is only needed, if you want to use the notification view.
-      --   If not available, we use `mini` as the fallback
+      -- nvim-notify provides the notification view; noice falls back to mini if missing.
       'rcarriga/nvim-notify',
     },
   },
