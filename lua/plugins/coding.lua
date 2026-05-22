@@ -49,11 +49,20 @@ return {
     opts = { use_default_keymaps = false, max_join_length = 150 },
   },
 
+  -- LuaSnip + snippet loaders. friendly-snippets is the third-party VSCode
+  -- snippet collection; my_snippets/ holds personal VSCode-style overrides;
+  -- lua/snippets/ holds programmatic lua-defined snippets (e.g. pinit).
   {
-    'rafamadriz/friendly-snippets',
+    'L3MON4D3/LuaSnip',
+    dependencies = { 'rafamadriz/friendly-snippets' },
     config = function()
       require('luasnip.loaders.from_vscode').lazy_load()
-      require('luasnip.loaders.from_vscode').lazy_load { paths = '~/.config/nvim/my_snippets' }
+      require('luasnip.loaders.from_vscode').lazy_load {
+        paths = { vim.fn.expand '~/.config/nvim/my_snippets' },
+      }
+      require('luasnip.loaders.from_lua').lazy_load {
+        paths = { vim.fn.expand '~/.config/nvim/lua/snippets' },
+      }
     end,
   },
 

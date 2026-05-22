@@ -5,15 +5,23 @@ return {
     build = ':TSUpdate',
     branch = 'main',
     config = function()
-      -- Ensure basic parsers installed up front
+      -- Ensure basic parsers installed up front.
+      -- Union of the previous list + upstream additions (markdown/bash/etc.).
       local parsers = {
+        'bash',
         'c',
-        'lua',
-        'javascript',
-        'typescript',
-        'python',
+        'diff',
         'go',
+        'html',
         'java',
+        'javascript',
+        'lua',
+        'luadoc',
+        'markdown',
+        'markdown_inline',
+        'python',
+        'query',
+        'typescript',
         'vim',
         'vimdoc',
       }
