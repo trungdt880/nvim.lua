@@ -238,7 +238,11 @@ return {
           },
         },
         -- Auto open the float, so you can easily read the errors when jumping with `[d` and `]d`
-        jump = { float = true },
+        jump = {
+          on_jump = function(_, bufnr)
+            vim.diagnostic.open_float { bufnr = bufnr, scope = 'cursor', focus = false }
+          end,
+        },
       }
 
       -- LSP servers and clients are able to communicate to each other what features they support.
