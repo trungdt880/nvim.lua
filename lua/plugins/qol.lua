@@ -26,6 +26,7 @@ return {
         { '<leader>h', group = '[H]arpoon' },
         { '<leader>x', group = 'Trouble' },
         { '<leader>a', group = '[A]I' },
+        { 'gs', group = '[S]urround' },
       },
     },
   },
@@ -55,10 +56,22 @@ return {
       }
 
       -- mini.surround — add/delete/replace brackets, quotes, etc.
-      --  - saiw) - [S]urround [A]dd [I]nner [W]ord [)]Paren
-      --  - sd'   - [S]urround [D]elete [']quotes
-      --  - sr)'  - [S]urround [R]eplace [)] [']
-      require('mini.surround').setup()
+      -- Moved off the `s` prefix to `gs` so flash.nvim (plugins/motion.lua)
+      -- can own `s`/`S`. This matches the modern LazyVim-style layout.
+      --  - gsaiw) - [G]o [S]urround [A]dd [I]nner [W]ord [)]Paren
+      --  - gsd'   - [G]o [S]urround [D]elete [']quotes
+      --  - gsr)'  - [G]o [S]urround [R]eplace [)] [']
+      require('mini.surround').setup {
+        mappings = {
+          add = 'gsa',
+          delete = 'gsd',
+          find = 'gsf',
+          find_left = 'gsF',
+          highlight = 'gsh',
+          replace = 'gsr',
+          update_n_lines = 'gsn',
+        },
+      }
 
       -- mini.statusline — kickstart sample, disabled because lualine owns
       -- the statusline in plugins/bar.lua.

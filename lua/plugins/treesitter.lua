@@ -63,14 +63,61 @@ return {
     end,
   },
   -- treesitter-context: sticky header showing the enclosing function/class as
-  -- you scroll. Disabled; uncomment to enable.
-  -- {
-  --   'nvim-treesitter/nvim-treesitter-context',
-  --   opts = {
-  --     enable = true,
-  --     max_lines = 10, -- 0 for no limit
-  --     multiline_threshold = 1,
-  --     trim_scope = 'outer',
-  --   },
-  -- },
+  -- you scroll.
+  {
+    'nvim-treesitter/nvim-treesitter-context',
+    event = 'BufReadPost',
+    opts = {
+      enable = true,
+      max_lines = 10, -- 0 for no limit
+      multiline_threshold = 1,
+      trim_scope = 'outer',
+    },
+  },
+
+  -- Treesitter text objects (main branch API — manual keymaps, no `keymaps`
+  -- table). Select/swap/move by syntax node. Keys chosen to avoid mini.ai
+  -- (owns brackets/quotes/f-call, aa/ii for next) and gitsigns (]c/[c hunks).
+  {
+    'nvim-treesitter/nvim-treesitter-textobjects',
+    branch = 'main',
+    dependencies = { 'nvim-treesitter/nvim-treesitter' },
+    event = 'VeryLazy',
+    config = function()
+      require('nvim-treesitter-textobjects').setup {
+        select = { lookahead = true },
+        move = { set_jumps = true },
+      }
+
+      local select = require 'nvim-treesitter-textobjects.select'
+      local swap = require 'nvim-treesitter-textobjects.swap'
+      local move = require 'nvim-treesitter-textobjects.move'
+
+      -- Select: am/im = function (m for method), ac/ic = class.
+      local sel = function(obj)
+        return function() select.select_textobject(obj, 'textobjects') end
+      end
+      vim.keymap.set({ 'x', 'o' }, 'am', sel '@function.outer', { desc = 'a function' })
+      vim.keymap.set({ 'x', 'o' }, 'im', sel '@function.inner', { desc = 'inner function' })
+      vim.keymap.set({ 'x', 'o' }, 'ac', sel '@class.outer', { desc = 'a class' })
+      vim.keymap.set({ 'x', 'o' }, 'ic', sel '@class.inner', { desc = 'inner class' })
+
+      -- Swap the parameter under cursor with the next/previous one.
+      vim.keymap.set('n', '<leader>cx', function() swap.swap_next '@parameter.inner' end, { desc = '[C]ode swap param ne[X]t' })
+      vim.keymap.set('n', '<leader>cX', function() swap.swap_previous '@parameter.inner' end, { desc = '[C]ode swap param pre[X]' })
+
+      -- Move: ]m/[m function start, ]M/[M function end, ]k/[k class start.
+      local moves = {
+        { ']m', move.goto_next_start, '@function.outer', 'Next function start' },
+        { '[m', move.goto_previous_start, '@function.outer', 'Prev function start' },
+        { ']M', move.goto_next_end, '@function.outer', 'Next function end' },
+        { '[M', move.goto_previous_end, '@function.outer', 'Prev function end' },
+        { ']k', move.goto_next_start, '@class.outer', 'Next class start' },
+        { '[k', move.goto_previous_start, '@class.outer', 'Prev class start' },
+      }
+      for _, m in ipairs(moves) do
+        vim.keymap.set({ 'n', 'x', 'o' }, m[1], function() m[2](m[3], 'textobjects') end, { desc = m[4] })
+      end
+    end,
+  },
 }
